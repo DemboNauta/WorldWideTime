@@ -1,0 +1,30 @@
+<div class="grid grid-cols-3 gap-4 w-full justify-items-center">
+    @for (ciudad of this.ciudades; track $index) {
+
+        
+         @if(ciudad.noche) {
+            <a href="#"
+            class="max-w-sm p-6 border rounded bg-gray-900 bg-opacity-45 border-white w-full flex items-center justify-center transition-all duration-300 ease-in-out shadow-[0px_0px_10px_0px_#000]">
+            
+            <div class="text-center">
+                <h5 class="mb-3 text-4xl text-rose-200 font-semibold">{{ ciudad.time }}</h5>
+                <p class="mb-5 text-2xl font-bold tracking-tight text-white">{{ ciudad.nombre }}</p>
+                <p class="text-rose-400">{{ ciudad.timeZone }}</p>
+            </div>
+            </a>
+        }
+        @else {
+            <a href="#"
+            class="max-w-sm p-6 border rounded bg-rose-900 bg-opacity-45 border-white w-full flex items-center justify-center transition-all duration-300 ease-in-out shadow-[0px_0px_10px_0px_#FFFF00]">
+            
+            <div class="text-center">
+                <h5 class="mb-3 text-4xl text-rose-200 font-semibold">{{ ciudad.time }}</h5>
+                <p class="mb-5 text-2xl font-bold tracking-tight text-white">{{ ciudad.nombre }}</p>
+                <p class="text-rose-400">{{ ciudad.timeZone }}</p>
+            </div>
+            </a>
+        }
+        
+
+    }
+</div>

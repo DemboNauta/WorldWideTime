@@ -3,7 +3,7 @@
 
         
          @if(ciudad.noche) {
-            <a href="#"
+            <div href="#"
             class="max-w-sm p-6 border rounded bg-gray-900 bg-opacity-45 border-white w-full flex items-center justify-center transition-all duration-300 ease-in-out shadow-[0px_0px_10px_0px_#000]">
             
             <div class="text-center">
@@ -11,10 +11,10 @@
                 <p class="mb-5 text-2xl font-bold tracking-tight text-white">{{ ciudad.nombre }}</p>
                 <p class="text-rose-400">{{ ciudad.timeZone }}</p>
             </div>
-            </a>
+            </div>
         }
         @else {
-            <a href="#"
+            <div href="#"
             class="max-w-sm p-6 border rounded bg-rose-900 bg-opacity-45 border-white w-full flex items-center justify-center transition-all duration-300 ease-in-out shadow-[0px_0px_10px_0px_#FFFF00]">
             
             <div class="text-center">
@@ -22,7 +22,7 @@
                 <p class="mb-5 text-2xl font-bold tracking-tight text-white">{{ ciudad.nombre }}</p>
                 <p class="text-rose-400">{{ ciudad.timeZone }}</p>
             </div>
-            </a>
+            </div>
         }
         
 

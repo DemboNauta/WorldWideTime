@@ -1,30 +1,174 @@
-<div class="grid grid-cols-1 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 gap-4 w-full justify-items-center mb-16">
-    @for (ciudad of this.ciudades; track $index) {
+<!-- ── Stats bar ──────────────────────────────────────────────────────────── -->
+<div class="flex flex-wrap items-center justify-center gap-3 mb-6 text-sm">
+  <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 text-white/80 backdrop-blur-sm border border-white/10">
+    🌐 <strong class="text-white">{{ ciudades().length }}</strong> ciudades
+  </span>
+  <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-400/15 text-amber-200 backdrop-blur-sm border border-amber-400/20">
+    ☀️ <strong>{{ dayCount() }}</strong> de día
+  </span>
+  <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-400/15 text-indigo-200 backdrop-blur-sm border border-indigo-400/20">
+    🌙 <strong>{{ nightCount() }}</strong> de noche
+  </span>
+  @if (favoritesCount() > 0) {
+    <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-400/15 text-rose-200 backdrop-blur-sm border border-rose-400/20">
+      ⭐ <strong>{{ favoritesCount() }}</strong> favoritas
+    </span>
+  }
+</div>
 
-        
-         @if(ciudad.noche) {
-            <div href="#"
-            class="max-w-sm p-6 border rounded bg-gray-900 bg-opacity-45 border-white w-full flex items-center justify-center transition-all duration-300 ease-in-out shadow-[0px_0px_10px_0px_#000]">
-            
-            <div class="text-center">
-                <h5 class="mb-3 text-4xl text-rose-200 font-semibold">{{ ciudad.time }}</h5>
-                <p class="mb-5 text-2xl font-bold tracking-tight text-white">{{ ciudad.nombre }}</p>
-                <p class="text-rose-400">{{ ciudad.timeZone }}</p>
-            </div>
-            </div>
-        }
-        @else {
-            <div href="#"
-            class="max-w-sm p-6 border rounded bg-rose-900 bg-opacity-45 border-white w-full flex items-center justify-center transition-all duration-300 ease-in-out shadow-[0px_0px_10px_0px_#FFFF00]">
-            
-            <div class="text-center">
-                <h5 class="mb-3 text-4xl text-rose-200 font-semibold">{{ ciudad.time }}</h5>
-                <p class="mb-5 text-2xl font-bold tracking-tight text-white">{{ ciudad.nombre }}</p>
-                <p class="text-rose-400">{{ ciudad.timeZone }}</p>
-            </div>
-            </div>
-        }
-        
+<!-- ── Controls ───────────────────────────────────────────────────────────── -->
+<div class="flex flex-wrap items-center gap-3 mb-8 w-full">
 
+  <!-- Search -->
+  <div class="relative flex-1 min-w-[200px]">
+    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none">🔍</span>
+    <input
+      type="text"
+      [value]="searchQuery()"
+      (input)="onSearch($event)"
+      placeholder="Buscar ciudad o país…"
+      class="w-full pl-9 pr-9 py-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/15
+             text-white placeholder-white/30 text-sm outline-none
+             focus:border-rose-400/60 focus:bg-white/15 transition-all duration-200"
+    />
+    @if (searchQuery()) {
+      <button
+        (click)="clearSearch()"
+        class="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors">✕</button>
     }
+  </div>
+
+  <!-- 12h / 24h toggle -->
+  <button
+    (click)="use24h.set(!use24h())"
+    class="px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200"
+    [class]="use24h()
+      ? 'bg-rose-500/80 border-rose-400/50 text-white shadow-lg shadow-rose-500/20'
+      : 'bg-white/10 border-white/15 text-white/70 hover:bg-white/15'">
+    {{ use24h() ? '24 h' : '12 h' }}
+  </button>
+
+  <!-- Favorites toggle -->
+  <button
+    (click)="showFavorites.set(!showFavorites())"
+    class="px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200"
+    [class]="showFavorites()
+      ? 'bg-amber-400/80 border-amber-300/50 text-slate-900 shadow-lg shadow-amber-400/20'
+      : 'bg-white/10 border-white/15 text-white/70 hover:bg-white/15'">
+    ⭐ Favoritas
+    @if (favoritesCount() > 0) {
+      <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-white/30">{{ favoritesCount() }}</span>
+    }
+  </button>
+
+  <!-- Sort -->
+  <select
+    [value]="sortBy()"
+    (change)="onSortChange($event)"
+    class="px-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/15
+           text-white/80 text-sm outline-none cursor-pointer
+           focus:border-rose-400/60 transition-all duration-200
+           [&>option]:bg-slate-800 [&>option]:text-white">
+    <option value="name">A → Z</option>
+    <option value="time">Por hora</option>
+  </select>
+</div>
+
+<!-- ── Results count ──────────────────────────────────────────────────────── -->
+@if (searchQuery() || showFavorites()) {
+  <p class="text-white/40 text-xs mb-4">
+    Mostrando {{ filteredCities().length }} de {{ ciudades().length }} ciudades
+  </p>
+}
+
+<!-- ── City grid ──────────────────────────────────────────────────────────── -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full mb-16">
+
+  @for (ciudad of filteredCities(); track ciudad.timeZone) {
+    <div
+      class="relative flex flex-col rounded-2xl border backdrop-blur-md
+             p-4 transition-all duration-500 group
+             hover:scale-[1.02] hover:shadow-2xl cursor-default"
+      [class]="ciudad.noche
+        ? 'bg-slate-900/55 border-slate-600/25 shadow-[0_4px_24px_rgba(0,0,0,0.5)]'
+        : 'bg-rose-950/45 border-rose-600/25 shadow-[0_4px_24px_rgba(244,63,94,0.15)]'">
+
+      <!-- Day / Night ambient glow -->
+      <div
+        class="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        [class]="ciudad.noche
+          ? 'bg-gradient-to-br from-indigo-500/5 to-transparent'
+          : 'bg-gradient-to-br from-rose-500/10 to-transparent'">
+      </div>
+
+      <!-- ── Card header: flag · name · favorite ── -->
+      <div class="flex items-start justify-between gap-2 mb-3 relative z-10">
+        <div class="flex items-center gap-2.5">
+          <span class="text-3xl leading-none select-none">{{ ciudad.emoji }}</span>
+          <div>
+            <h3 class="text-white font-bold text-base leading-tight">{{ ciudad.nombre }}</h3>
+            <p class="text-white/45 text-xs mt-0.5">{{ ciudad.country }}</p>
+          </div>
+        </div>
+        <button
+          (click)="toggleFavorite(ciudad)"
+          class="text-xl leading-none p-1 rounded-lg hover:bg-white/10 transition-all duration-200 flex-shrink-0"
+          [title]="ciudad.favorita ? 'Quitar de favoritas' : 'Añadir a favoritas'">
+          {{ ciudad.favorita ? '⭐' : '☆' }}
+        </button>
+      </div>
+
+      <!-- ── Divider ── -->
+      <div
+        class="h-px mb-3 relative z-10"
+        [class]="ciudad.noche ? 'bg-white/8' : 'bg-white/10'">
+      </div>
+
+      <!-- ── Clock area: analog + digital ── -->
+      <div class="flex items-center gap-3 mb-3 relative z-10">
+        <!-- Analog clock -->
+        <div class="w-[70px] h-[70px] flex-shrink-0"
+             [class]="ciudad.noche ? 'text-slate-300' : 'text-rose-200'">
+          <app-analog-clock [date]="ciudad.timeDate" />
+        </div>
+
+        <!-- Digital info -->
+        <div class="min-w-0">
+          <div
+            class="font-mono font-bold tracking-tight leading-none text-white"
+            [class]="use24h() ? 'text-2xl' : 'text-xl'">
+            {{ formatTime(ciudad.timeDate) }}
+          </div>
+          <div class="text-white/55 text-xs mt-1.5 capitalize leading-snug">
+            {{ formatDate(ciudad.timeDate) }}
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Footer: timezone · offset · day/night ── -->
+      <div
+        class="flex items-center justify-between text-[10px] pt-2 relative z-10"
+        [class]="ciudad.noche ? 'border-t border-white/8 text-white/35' : 'border-t border-white/10 text-white/40'">
+        <span class="truncate max-w-[110px]">{{ ciudad.timeZone }}</span>
+        <span class="font-semibold"
+              [class]="ciudad.noche ? 'text-indigo-300/70' : 'text-rose-300/70'">
+          {{ getUtcOffset(ciudad.timeZone, ciudad.timeDate) }}
+        </span>
+        <span>{{ ciudad.noche ? '🌙' : '☀️' }}</span>
+      </div>
+    </div>
+  }
+
+  <!-- Empty state -->
+  @empty {
+    <div class="col-span-full flex flex-col items-center justify-center py-24 gap-4">
+      <span class="text-6xl">🔭</span>
+      <p class="text-white/50 text-lg">No se encontraron ciudades</p>
+      <button
+        (click)="clearSearch()"
+        class="px-5 py-2 rounded-xl bg-rose-500/70 hover:bg-rose-500 text-white text-sm font-semibold transition-colors">
+        Limpiar búsqueda
+      </button>
+    </div>
+  }
 </div>
